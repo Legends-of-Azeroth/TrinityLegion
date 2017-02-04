@@ -2896,7 +2896,6 @@ void Unit::_UpdateAutoRepeatSpell()
     {
         SpellCastResult result = m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->CheckCast(true);
         if (result != SPELL_CAST_OK && result != SPELL_FAILED_MOVING)
-        if (result != SPELL_CAST_OK)
         {
             if (autoRepeatSpellInfo->Id != 75)
                 InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
