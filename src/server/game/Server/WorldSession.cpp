@@ -881,7 +881,8 @@ void WorldSession::ProcessQueryCallbacks()
 
     if (_realmAccountLoginCallback.valid() && _realmAccountLoginCallback.wait_for(std::chrono::seconds(0)) == std::future_status::ready &&
         _accountLoginCallback.valid() && _accountLoginCallback.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
-        InitializeSessionCallback(_realmAccountLoginCallback.get(), _accountLoginCallback.get());
+        InitializeSessionCallback(static_cast<LoginDatabaseQueryHolder*>(_realmAccountLoginCallback.get()),
+            static_cast<CharacterDatabaseQueryHolder*>(_accountLoginCallback.get()));
 
     //! HandlePlayerLoginOpcode
     if (_charLoginCallback.valid() && _charLoginCallback.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
@@ -929,7 +930,7 @@ QueryCallback WorldSession::LoadPermissionsAsync()
     return _RBACData->LoadFromDBAsync();
 }
 
-class AccountInfoQueryHolderPerRealm : public SQLQueryHolder
+class AccountInfoQueryHolderPerRealm : public CharacterDatabaseQueryHolder
 {
 public:
     enum
@@ -958,7 +959,7 @@ public:
     }
 };
 
-class AccountInfoQueryHolder : public SQLQueryHolder
+class AccountInfoQueryHolder : public LoginDatabaseQueryHolder
 {
 public:
     enum
@@ -1040,7 +1041,7 @@ void WorldSession::InitializeSession()
     _accountLoginCallback = LoginDatabase.DelayQueryHolder(holder);
 }
 
-void WorldSession::InitializeSessionCallback(SQLQueryHolder* realmHolder, SQLQueryHolder* holder)
+void WorldSession::InitializeSessionCallback(LoginDatabaseQueryHolder* realmHolder, CharacterDatabaseQueryHolder* holder)
 {
     LoadAccountData(realmHolder->GetPreparedResult(AccountInfoQueryHolderPerRealm::GLOBAL_ACCOUNT_DATA), GLOBAL_CACHE_MASK);
     LoadTutorialsData(realmHolder->GetPreparedResult(AccountInfoQueryHolderPerRealm::TUTORIALS));
