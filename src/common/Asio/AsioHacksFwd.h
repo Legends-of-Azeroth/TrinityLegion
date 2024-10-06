@@ -53,6 +53,9 @@ namespace Trinity
 {
     namespace Asio
     {
+        class DeadlineTimer;
+        class IoContext;
+        class Resolver;
         class Strand;
     }
 }
