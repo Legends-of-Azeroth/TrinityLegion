@@ -1202,6 +1202,7 @@ class TC_GAME_API ObjectMgr
         void LoadCreatureTemplates();
         void LoadCreatureTemplateJournals();
         void LoadCreatureTemplateAddons();
+        void LoadCreatureSparringTemplate();
         void LoadScriptParams();
         void LoadCreatureTemplate(Field* fields);
         void LoadCreatureScalingData();
@@ -1455,6 +1456,17 @@ class TC_GAME_API ObjectMgr
         }
         GameObjectData& NewGOData(ObjectGuid::LowType guid) { return _gameObjectDataStore[guid]; }
         void DeleteGOData(ObjectGuid::LowType guid);
+
+        float GetSparringHealthLimitFor(uint32 entry) const
+        {
+            auto itr = _creatureSparringTemplateStore.find(entry);
+            if (itr != _creatureSparringTemplateStore.end())
+            {
+                return itr->second;
+            }
+
+            return 0.0f;
+        }
 
         TrinityString const* GetTrinityString(uint32 entry) const
         {
@@ -1751,6 +1763,7 @@ class TC_GAME_API ObjectMgr
         CreatureTemplateJournalContainer _creatureTemplateJournalStore;
         CreatureModelContainer _creatureModelStore;
         CreatureAddonContainer _creatureAddonStore;
+        CreatureSparringTemplateMap _creatureSparringTemplateStore;
         GameObjectAddonContainer _gameObjectAddonStore;
         GameObjectQuestItemMap _gameObjectQuestItemStore;
         CreatureQuestItemMap _creatureQuestItemStore;
