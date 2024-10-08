@@ -925,8 +925,6 @@ bool Creature::Create(ObjectGuid::LowType guidlow, Map* map, uint32 entry, float
         return false;
     }
 
-    m_area = sAreaMgr->GetArea(GetAreaIdFromPosition());
-
     if (!CreateFromProto(guidlow, entry, data, vehId))
         return false;
 

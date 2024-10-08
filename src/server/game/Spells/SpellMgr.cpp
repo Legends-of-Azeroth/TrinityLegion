@@ -23,7 +23,6 @@
 #include "Chat.h"
 #include "DB2Stores.h"
 #include "DatabaseEnv.h"
-#include "GameEventMgr.h"
 #include "Log.h"
 #include "MotionMaster.h"
 #include "ObjectMgr.h"
@@ -645,9 +644,6 @@ bool SpellArea::IsFitToRequirements(Player const* player, uint32 newZone, uint32
     if (auraSpell)                               // does not have expected aura
         if (!player || (auraSpell > 0 && !player->HasAura(auraSpell)) || (auraSpell < 0 && player->HasAura(-auraSpell)))
             return false;
-
-    if (!sGameEventMgr->IsSpellAreaEventActive(areaId, spellId))
-        return false;
 
     if (player)
     {
