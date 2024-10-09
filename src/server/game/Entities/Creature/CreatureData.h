@@ -146,7 +146,7 @@ enum CreatureDifficultyFlags4
     CREATURE_DIFFICULTYFLAGS_4_DO_NOT_PLAY_UNIT_EVENT_SOUNDS       = 0x00000010, // CREATURE_TYPEFLAGS_DO_NOT_PLAY_UNIT_EVENT_SOUNDS
     CREATURE_DIFFICULTYFLAGS_4_HAS_NO_SHADOW_BLOB                  = 0x00000020, // CREATURE_TYPEFLAGS_HAS_NO_SHADOW_BLOB
     CREATURE_DIFFICULTYFLAGS_4_UNK3                                = 0x00000040,
-    CREATURE_DIFFICULTYFLAGS_4_UNK4                                = 0x00000080,
+    CREATURE_DIFFICULTYFLAGS_4_NO_NPC_DAMAGE_BELOW_85PCT           = 0x00000080,
     CREATURE_DIFFICULTYFLAGS_4_UNK5                                = 0x00000100,
     CREATURE_DIFFICULTYFLAGS_4_UNK6                                = 0x00000200,
     CREATURE_DIFFICULTYFLAGS_4_UNK7                                = 0x00000400,
@@ -563,6 +563,7 @@ struct CreatureAddon
     uint16 movementAnimKit;
     uint16 meleeAnimKit;
     std::vector<uint32> auras;
+    uint8 noNPCDamageBelowHealthPct;
 };
 
 // Vendors
@@ -645,5 +646,4 @@ struct TC_GAME_API TrainerSpellData
     TrainerSpell const* Find(uint32 spell_id) const;
 };
 
-typedef std::unordered_map<uint32, float /*SparringHealthLimit*/> CreatureSparringTemplateMap;
 #endif // CreatureData_h__

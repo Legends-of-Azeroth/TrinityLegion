@@ -1736,6 +1736,9 @@ void World::SetInitialWorldSettings()
     TC_LOG_INFO("server.loading", "Loading Creature template addons...");
     sObjectMgr->LoadCreatureTemplateAddons();
 
+    TC_LOG_INFO("server.loading", "Loading Creature template sparring...");
+    sObjectMgr->LoadCreatureTemplateSparring();
+
     TC_LOG_INFO("server.loading", "Loading Creature template scaling...");
     sObjectMgr->LoadCreatureScalingData();
 
@@ -1783,9 +1786,6 @@ void World::SetInitialWorldSettings()
 
     TC_LOG_INFO("server.loading", "Loading Creature Quest Items...");
     sObjectMgr->LoadCreatureQuestItems();
-
-    TC_LOG_INFO("server.loading", "Loading Creature Sparring Data...");
-    sObjectMgr->LoadCreatureSparringTemplate();
 
     TC_LOG_INFO("server.loading", "Loading Creature Linked Respawn...");
     sObjectMgr->LoadLinkedRespawn();                             // must be after LoadCreatures(), LoadGameObjects()

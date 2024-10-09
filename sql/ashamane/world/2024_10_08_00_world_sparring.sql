@@ -1,10 +1,12 @@
 DROP TABLE IF EXISTS `creature_sparring_template`;
-CREATE TABLE `creature_sparring_template` (
-	`CreatureID` INT (10),
-	`HealthLimitPct` FLOAT 
-); 
 
-INSERT INTO `creature_sparring_template` (`CreatureID`, `HealthLimitPct`) VALUES
+DROP TABLE IF EXISTS `creature_template_sparring`;
+CREATE TABLE `creature_template_sparring` (
+  `Entry` int NOT NULL,
+  `NoNPCDamageBelowHealthPct` tinyint unsigned NOT NULL
+);
+
+INSERT INTO `creature_template_sparring` (`Entry`, `NoNPCDamageBelowHealthPct`) VALUES
 ('98','85'),
 ('123','85'),
 ('124','85'),

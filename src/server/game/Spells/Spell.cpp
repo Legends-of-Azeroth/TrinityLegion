@@ -2628,12 +2628,9 @@ void Spell::DoAllEffectOnTarget(TargetInfo* target)
             caster->CalculateSpellDamageTaken(&damageInfo, m_damage, m_spellInfo, m_attackType, target->crit);
             caster->DealDamageMods(damageInfo.target, damageInfo.damage, &damageInfo.absorb);
 
-            // Sparring Checks
-            if (Creature* target = damageInfo.target->ToCreature())
-                if (caster->IsCreature() && !caster->IsCharmedOwnedByPlayerOrPlayer())
-                    if (target->GetNoNpcDamageBelowPctHealthValue() != 0.0f)
-                        if (target->GetHealthPct() <= target->GetNoNpcDamageBelowPctHealthValue())
-                            damageInfo.damage = 0;
+            // sparring
+            if (Creature* victimCreature = damageInfo.target->ToCreature())
+                damageInfo.damage = victimCreature->CalculateDamageForSparring(damageInfo.attacker, damageInfo.damage);
 
             hitMask |= createProcHitMask(&damageInfo, missInfo);
             procVictim |= PROC_FLAG_TAKEN_DAMAGE;

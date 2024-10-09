@@ -83,6 +83,7 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         static Creature* CreateCreatureFromDB(ObjectGuid::LowType spawnId, Map* map, bool addToMap = true, bool allowDuplicate = false);
 
         bool LoadCreaturesAddon();
+        void LoadCreaturesSparringHealth();
         void SelectLevel();
         void UpdateLevelDependantStats();
         void LoadEquipment(int8 id = 1, bool force = false);
@@ -357,10 +358,9 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         void ReenableHealthRegen() { m_disableHealthRegen = false; }
         bool HealthRegenDisabled() const { return m_disableHealthRegen; }
 
-        // Sets the the max health percentage threshold at which uncontrolled/unowned creatures can no longer deal damage to the creature
-        void SetNoNpcDamageBelowPctHealthValue(float value) { _noNpcDamageBelowPctHealth = std::min<float>(value, 100.f); }
-        void ResetNoNpcDamageBelowPctHealthValue() { _noNpcDamageBelowPctHealth = 0.f; }
-        float const GetNoNpcDamageBelowPctHealthValue() const { return _noNpcDamageBelowPctHealth; }
+        void OverrideSparringHealthValues(std::vector<float>& healthPct) { _overridingSparringHealthPctValues = healthPct; }
+        float GetSparringHealthPct() { return _sparringHealthPct; }
+        uint32 CalculateDamageForSparring(Unit* attacker, uint32 damage);
 
     protected:
         bool CreateFromProto(ObjectGuid::LowType guidlow, uint32 entry, CreatureData const* data = nullptr, uint32 vehId = 0);
@@ -442,7 +442,8 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
 
         bool m_disableHealthRegen;
 
-        float _noNpcDamageBelowPctHealth;
+        std::vector<float> _overridingSparringHealthPctValues;
+        float _sparringHealthPct;
 };
 
 class TC_GAME_API AssistDelayEvent : public BasicEvent

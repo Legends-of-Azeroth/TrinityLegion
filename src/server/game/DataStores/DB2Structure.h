@@ -630,6 +630,17 @@ struct ConversationLineEntry
     uint8 EndAnimation;
 };
 
+struct CreatureDifficultyEntry
+{
+    int32       ID;
+    uint32      Flags[7];
+    int16       FactionID;
+    int8        ExpansionID;
+    int8        MinLevel;
+    int8        MaxLevel;
+    int32       CreatureID;
+};
+
 struct CreatureDisplayInfoEntry
 {
     uint32 ID;

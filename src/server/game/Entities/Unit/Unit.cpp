@@ -736,21 +736,6 @@ void Unit::DealDamageMods(Unit const* victim, uint32 &damage, uint32* absorb) co
 
 uint32 Unit::DealDamage(Unit* victim, uint32 damage, CleanDamage const* cleanDamage, DamageEffectType damagetype, SpellSchoolMask damageSchoolMask, SpellInfo const* spellProto, bool durabilityLoss)
 {
-    // Sparring Checks
-    if (Creature* target = victim->ToCreature())
-    {
-        if (IsCreature() && !IsCharmedOwnedByPlayerOrPlayer())
-        {
-            if (target->GetNoNpcDamageBelowPctHealthValue() != 0.0f)
-            {
-                if (damage >= target->GetHealth()) // First check: if we have a sparring limit we will never allow creatures to kill the sparring victim
-                    damage = target->GetHealth() - 1;
-                else if (target->GetHealthPct() <= target->GetNoNpcDamageBelowPctHealthValue()) // Second check: stop incomming damage when we have surpassed the health limit
-                    damage = 0;
-            }
-        }
-    }
-
     if (victim->IsAIEnabled)
         victim->GetAI()->DamageTaken(this, damage);
 
@@ -762,6 +747,10 @@ uint32 Unit::DealDamage(Unit* victim, uint32 damage, CleanDamage const* cleanDam
 
     // Hook for OnDamage Event
     sScriptMgr->OnDamage(this, victim, damage, spellProto);
+
+    // sparring
+    if (Creature* victimCreature = victim->ToCreature())
+        damage = victimCreature->CalculateDamageForSparring(victim, damage);
 
     if (victim->IsPlayer() && this != victim)
     {
@@ -1942,11 +1931,11 @@ void Unit::CalcAbsorbResist(DamageInfo& damageInfo)
             uint32 split_absorb = 0;
             DealDamageMods(caster, splitDamage, &split_absorb);
 
-            // Sparring Checks
-            if (Creature* target = damageInfo.GetVictim()->ToCreature())
-                if (IsCreature() && !IsCharmedOwnedByPlayerOrPlayer())
-                    if (target->GetNoNpcDamageBelowPctHealthValue() != 0.0f)
-                        if (target->GetHealthPct() <= target->GetNoNpcDamageBelowPctHealthValue())
+            // sparring
+            if (Creature* victimCreature = damageInfo.GetVictim()->ToCreature())
+                if (Unit* attacker = damageInfo.GetAttacker())
+                    if (attacker->IsCreature() && !attacker->IsCharmedOwnedByPlayerOrPlayer())
+                        if (victimCreature->GetHealthPct() != 0 && victimCreature->GetHealthPct() <= victimCreature->GetSparringHealthPct())
                             damageInfo.ModifyDamage(damageInfo.GetDamage() * -1);
 
             SpellNonMeleeDamage log(this, caster, (*itr)->GetSpellInfo()->Id, (*itr)->GetBase()->GetSpellXSpellVisualId(), damageInfo.GetSchoolMask(), (*itr)->GetBase()->GetCastGUID());
@@ -2051,12 +2040,12 @@ void Unit::AttackerStateUpdate(Unit* victim, WeaponAttackType attType, bool extr
         // Send log damage message to client
         DealDamageMods(victim, damageInfo.damage, &damageInfo.absorb);
 
-        // Sparring Checks
-        if (Creature* target = victim->ToCreature())
-                if (IsCreature() && !IsCharmedOwnedByPlayerOrPlayer())
-                    if (target->GetNoNpcDamageBelowPctHealthValue() != 0.0f)
-                        if (target->GetHealthPct() <= target->GetNoNpcDamageBelowPctHealthValue())
-                       damageInfo.HitInfo |= HITINFO_FAKE_DAMAGE;
+        // sparring
+        if (Creature* victimCreature = victim->ToCreature())
+            if (IsCreature() && !IsCharmedOwnedByPlayerOrPlayer())
+                if (victimCreature->GetSparringHealthPct() != 0.0f)
+                    if (victimCreature->GetHealthPct() <= victimCreature->GetSparringHealthPct())
+                        damageInfo.HitInfo |= HITINFO_FAKE_DAMAGE;
 
         SendAttackStateUpdate(&damageInfo);
 
@@ -2068,49 +2057,6 @@ void Unit::AttackerStateUpdate(Unit* victim, WeaponAttackType attType, bool extr
         TC_LOG_DEBUG("entities.unit", "AttackerStateUpdate: %s attacked %s for %u dmg, absorbed %u, blocked %u, resisted %u.",
             GetGUID().ToString().c_str(), victim->GetGUID().ToString().c_str(), damageInfo.damage, damageInfo.absorb, damageInfo.blocked_amount, damageInfo.resist);
     }
-}
-
-void Unit::FakeAttackerStateUpdate(Unit* victim, WeaponAttackType attType /*= BASE_ATTACK*/)
-{
-    if (HasUnitState(UNIT_STATE_CANNOT_AUTOATTACK) || HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
-        return;
-
-    if (!victim->IsAlive())
-        return;
-
-    if ((attType == BASE_ATTACK || attType == OFF_ATTACK) && !IsWithinLOSInMap(victim))
-        return;
-
-    CombatStart(victim);
-    RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MELEE_ATTACK);
-
-    if (attType != BASE_ATTACK && attType != OFF_ATTACK)
-        return;                                             // ignore ranged case
-
-    if (GetTypeId() == TYPEID_UNIT && !HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED))
-        SetFacingToObject(victim); // update client side facing to face the target (prevents visual glitches when casting untargeted spells)
-
-    CalcDamageInfo damageInfo;
-    damageInfo.attacker = this;
-    damageInfo.target = victim;
-    damageInfo.damageSchoolMask = GetMeleeDamageSchoolMask();
-    damageInfo.attackType = attType;
-    damageInfo.damage = 0;
-    damageInfo.cleanDamage = 0;
-    damageInfo.absorb = 0;
-    damageInfo.resist = 0;
-    damageInfo.blocked_amount = 0;
-
-    damageInfo.TargetState = VICTIMSTATE_HIT;
-    damageInfo.HitInfo = HITINFO_AFFECTS_VICTIM | HITINFO_NORMALSWING | HITINFO_FAKE_DAMAGE;
-    if (attType == OFF_ATTACK)
-        damageInfo.HitInfo |= HITINFO_OFFHAND;
-
-    damageInfo.procAttacker = PROC_FLAG_NONE;
-    damageInfo.procVictim = PROC_FLAG_NONE;
-    damageInfo.hitOutCome = MELEE_HIT_NORMAL;
-
-    SendAttackStateUpdate(&damageInfo);
 }
 
 void Unit::HandleProcExtraAttackFor(Unit* victim)
