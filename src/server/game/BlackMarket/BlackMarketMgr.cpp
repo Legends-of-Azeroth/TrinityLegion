@@ -168,7 +168,7 @@ void BlackMarketMgr::RefreshAuctions()
     if (auctionDiff <= 0)
         return;
 
-    SQLTransaction trans = CharacterDatabase.BeginTransaction();
+    CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
     std::list<BlackMarketTemplate const*> templates;
     for (auto const& pair : _templates)
@@ -455,7 +455,7 @@ bool BlackMarketEntry::ValidateBid(uint64 bid) const
     return true;
 }
 
-void BlackMarketEntry::PlaceBid(uint64 bid, Player* player, SQLTransaction& trans)
+void BlackMarketEntry::PlaceBid(uint64 bid, Player* player, CharacterDatabaseTransaction& trans)
 {
     if (bid < _currentBid)
         return;

@@ -3154,7 +3154,7 @@ void Creature::ReLoad(bool skipDB)
     PreparedQueryResult result;
     if (!skipDB)
     {
-        PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_CREATURE_TEMPLATE);
+        WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_CREATURE_TEMPLATE);
         stmt->setUInt32(0, entry);
         result = WorldDatabase.Query(stmt);
 

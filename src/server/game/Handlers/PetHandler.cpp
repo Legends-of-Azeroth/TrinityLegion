@@ -739,7 +739,7 @@ void WorldSession::UpdatePetSlot(uint32 petNumberA, uint8 oldPetSlot, uint8 newP
     PlayerPetData* playerPetDataA = _player->GetPlayerPetDataById(petNumberA);
     PlayerPetData* playerPetDataB = _player->GetPlayerPetDataBySlot(newPetSlot);
 
-    SQLTransaction trans = CharacterDatabase.BeginTransaction();
+    CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
     // If Slot is already in use
     if (playerPetDataB)
@@ -754,7 +754,7 @@ void WorldSession::UpdatePetSlot(uint32 petNumberA, uint8 oldPetSlot, uint8 newP
         }
         else
         {
-            PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_PET_SLOT_BY_SLOT);
+            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_PET_SLOT_BY_SLOT);
             stmt->setUInt32(0, oldPetSlot);
             stmt->setUInt64(1, _player->GetGUID().GetCounter());
             stmt->setUInt32(2, newPetSlot);
@@ -773,7 +773,7 @@ void WorldSession::UpdatePetSlot(uint32 petNumberA, uint8 oldPetSlot, uint8 newP
     }
     else
     {
-        PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_PET_SLOT_BY_ID);
+        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_PET_SLOT_BY_ID);
         stmt->setUInt32(0, newPetSlot);
         stmt->setUInt64(1, _player->GetGUID().GetCounter());
         stmt->setUInt32(2, petNumberA);

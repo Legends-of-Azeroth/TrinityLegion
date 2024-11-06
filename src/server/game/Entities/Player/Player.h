@@ -2628,7 +2628,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         void _SaveSkills(CharacterDatabaseTransaction& trans);
         void _SaveSpells(CharacterDatabaseTransaction& trans);
         void _SaveEquipmentSets(CharacterDatabaseTransaction& trans);
-        void _SaveArenaData(SQLTransaction& trans);
+        void _SaveArenaData(CharacterDatabaseTransaction& trans);
+        void _SaveBGData(CharacterDatabaseTransaction& trans);
         void _SaveGlyphs(CharacterDatabaseTransaction& trans) const;
         void _SaveTalents(CharacterDatabaseTransaction& trans);
         void _SaveStats(CharacterDatabaseTransaction& trans) const;

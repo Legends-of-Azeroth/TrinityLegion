@@ -823,7 +823,7 @@ void WorldSession::SaveTutorialsData(CharacterDatabaseTransaction& trans)
     if (!_tutorialsChanged)
         return;
 
-    PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_HAS_TUTORIALS);
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_HAS_TUTORIALS);
     stmt->setUInt32(0, GetAccountId());
     bool hasTutorials = bool(CharacterDatabase.Query(stmt));
     // Modify data in DB
@@ -1408,7 +1408,7 @@ void WorldSession::LoadRecoveries()
     if (AccountMgr::GetCharactersCount(GetAccountId()) >= sWorld->getIntConfig(CONFIG_CHARACTERS_PER_REALM))
         return;
 
-    PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_RECOVERY);
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_RECOVERY);
     stmt->setUInt32(0, GetAccountId());
 
     PreparedQueryResult result = CharacterDatabase.Query(stmt);
@@ -1524,7 +1524,7 @@ void WorldSession::LoadRecoveries()
         else
             loc.WorldRelocate(1, 1569.96f, -4397.41f, 16.05f, 0.543025f);
 
-        SQLTransaction trans = CharacterDatabase.BeginTransaction();
+        CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
         Player::SavePositionInDB(loc, 0, newChar.GetGUID(), trans);
 
         newChar.CleanupsBeforeDelete();

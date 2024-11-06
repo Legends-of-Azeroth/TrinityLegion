@@ -2712,7 +2712,7 @@ void ObjectMgr::RemoveGameobjectFromGrid(ObjectGuid::LowType guid, GameObjectDat
 // name must be checked to correctness (if received) before call this function
 ObjectGuid ObjectMgr::GetPlayerGUIDByName(std::string const& name)
 {
-    PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_GUID_BY_NAME);
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_GUID_BY_NAME);
     stmt->setString(0, name);
 
     if (PreparedQueryResult result = CharacterDatabase.Query(stmt))
@@ -2761,7 +2761,7 @@ uint32 ObjectMgr::GetPlayerAccountIdByGUID(ObjectGuid const& guid)
 
 uint32 ObjectMgr::GetPlayerAccountIdByPlayerName(std::string const& name)
 {
-    PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ACCOUNT_BY_NAME);
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ACCOUNT_BY_NAME);
     stmt->setString(0, name);
 
     if (PreparedQueryResult result = CharacterDatabase.Query(stmt))

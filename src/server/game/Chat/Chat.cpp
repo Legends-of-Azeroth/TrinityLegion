@@ -346,7 +346,7 @@ bool ChatHandler::ExecuteCommandInTable(std::vector<ChatCommand> const& table, c
                     guid.ToString().c_str());
 
                 uint8 index = 0;
-                PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_LOG_GM_COMMAND);
+                CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_LOG_GM_COMMAND);
                 stmt->setUInt32(index++, player->GetSession()->GetAccountId());
                 stmt->setString(index++, player->GetSession()->GetBattlenetAccountName());
                 stmt->setUInt32(index++, player->GetGUID().GetCounter());
