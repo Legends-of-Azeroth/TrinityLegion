@@ -2685,6 +2685,10 @@ void Player::GiveLevel(uint8 level)
 
     UpdateCriteria(CRITERIA_TYPE_REACH_LEVEL);
 
+    // Leaning Running Wild
+    if (getRace() == RACE_WORGEN && level == 20)
+        CastSpell(this, SPELL_RUNNING_WILD_LEARN, true);
+
     // Refer-A-Friend
     if (GetSession()->GetRecruiterId())
     {
