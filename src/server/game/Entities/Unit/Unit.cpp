@@ -2895,15 +2895,12 @@ void Unit::_UpdateAutoRepeatSpell()
     if (isAttackReady(RANGED_ATTACK))
     {
         SpellCastResult result = m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->CheckCast(true);
-        if (result != SPELL_CAST_OK && result != SPELL_FAILED_MOVING)
+        if (result != SPELL_CAST_OK)
         {
             if (autoRepeatSpellInfo->Id != 75)
                 InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
             else if (GetTypeId() == TYPEID_PLAYER)
-            {
-                ObjectGuid castId = ObjectGuid::Create<HighGuid::Cast>(SPELL_CAST_SOURCE_NORMAL, GetMapId(), autoRepeatSpellInfo->Id, GetMap()->GenerateLowGuid<HighGuid::Cast>());
-                Spell::SendCastResult(ToPlayer(), autoRepeatSpellInfo, 1, castId, result);
-            }
+                Spell::SendCastResult(ToPlayer(), autoRepeatSpellInfo, m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->m_SpellVisual, m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->m_castId, result);
 
             return;
         }
