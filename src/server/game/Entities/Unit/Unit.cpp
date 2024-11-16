@@ -736,6 +736,19 @@ void Unit::DealDamageMods(Unit const* victim, uint32 &damage, uint32* absorb) co
 
 uint32 Unit::DealDamage(Unit* victim, uint32 damage, CleanDamage const* cleanDamage, DamageEffectType damagetype, SpellSchoolMask damageSchoolMask, SpellInfo const* spellProto, bool durabilityLoss)
 {
+    if (victim->getRace() == RACE_WORGEN && victim->ToPlayer())
+    {
+        if (Player* worgenVictm = victim->ToPlayer())
+            if (worgenVictm->HasSpell(SPELL_TWO_FORMS_RACIAL) && !worgenVictm->HasAura(SPELL_ALTERED_FORM_RACIAL))
+                worgenVictm->CastSpell(worgenVictm, SPELL_ALTERED_FORM_RACIAL, true);
+    }
+    if (getRace() == RACE_WORGEN && ToPlayer())
+    {
+        if (Player* worgenPlayer = ToPlayer())
+            if (worgenPlayer->HasSpell(SPELL_TWO_FORMS_RACIAL) && !HasAura(SPELL_ALTERED_FORM_RACIAL))
+                CastSpell(worgenPlayer, SPELL_ALTERED_FORM_RACIAL, true);
+    }
+
     if (victim->IsAIEnabled)
         victim->GetAI()->DamageTaken(this, damage);
 
@@ -2863,7 +2876,7 @@ void Unit::_UpdateAutoRepeatSpell()
 
     // check "realtime" interrupts
     // don't cancel spells which are affected by a SPELL_AURA_CAST_WHILE_WALKING effect
-    if (((GetTypeId() == TYPEID_PLAYER && ToPlayer()->isMoving() && autoRepeatSpellInfo->Id != 75) || IsNonMeleeSpellCast(false, false, true, autoRepeatSpellInfo->Id == 75)) &&
+    if (((GetTypeId() == TYPEID_PLAYER && ToPlayer()->isMoving()) || IsNonMeleeSpellCast(false, false, true, autoRepeatSpellInfo->Id == 75)) &&
         !HasAuraTypeWithAffectMask(SPELL_AURA_CAST_WHILE_WALKING, autoRepeatSpellInfo))
     {
         // cancel wand shoot
@@ -2882,15 +2895,12 @@ void Unit::_UpdateAutoRepeatSpell()
     if (isAttackReady(RANGED_ATTACK))
     {
         SpellCastResult result = m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->CheckCast(true);
-        if (result != SPELL_CAST_OK && result != SPELL_FAILED_MOVING)
+        if (result != SPELL_CAST_OK)
         {
             if (autoRepeatSpellInfo->Id != 75)
                 InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
             else if (GetTypeId() == TYPEID_PLAYER)
-            {
-                ObjectGuid castId = ObjectGuid::Create<HighGuid::Cast>(SPELL_CAST_SOURCE_NORMAL, GetMapId(), autoRepeatSpellInfo->Id, GetMap()->GenerateLowGuid<HighGuid::Cast>());
-                Spell::SendCastResult(ToPlayer(), autoRepeatSpellInfo, 1, castId, result);
-            }
+                Spell::SendCastResult(ToPlayer(), autoRepeatSpellInfo, m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->m_SpellVisual, m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->m_castId, result);
 
             return;
         }
@@ -5785,6 +5795,10 @@ void Unit::CombatStop(bool includingCast)
     if (GetTypeId() == TYPEID_PLAYER)
         ToPlayer()->SendAttackSwingCancelAttack();     // melee and ranged forced attack cancel
     ClearInCombat();
+
+    // just in case
+    if (IsPetInCombat() && GetTypeId() != TYPEID_PLAYER)
+        ClearInPetCombat();
 }
 
 void Unit::CombatStopWithPets(bool includingCast)
@@ -8048,10 +8062,12 @@ void Unit::SetInCombatState(bool PvP, Unit* enemy)
             Dismount();
     }
 
-    for (Unit::ControlList::iterator itr = m_Controlled.begin(); itr != m_Controlled.end(); ++itr)
+    for (Unit::ControlList::iterator itr = m_Controlled.begin(); itr != m_Controlled.end();)
     {
-        (*itr)->SetInCombatState(PvP, enemy);
-        (*itr)->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PET_IN_COMBAT);
+        Unit* controlled = *itr;
+        ++itr;
+
+        controlled->SetInCombatState(PvP, enemy);
     }
 
     ProcSkillsAndAuras(enemy, PROC_FLAG_ENTER_COMBAT, PROC_FLAG_NONE, PROC_SPELL_TYPE_MASK_ALL, PROC_SPELL_PHASE_NONE, PROC_HIT_NONE, nullptr, nullptr, nullptr);
@@ -8082,8 +8098,14 @@ void Unit::ClearInCombat()
     else
         ToPlayer()->OnCombatExit();
 
-    RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PET_IN_COMBAT);
     RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_LEAVE_COMBAT);
+}
+
+void Unit::ClearInPetCombat()
+{
+    RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PET_IN_COMBAT);
+    if (Unit* owner = GetOwner())
+        owner->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PET_IN_COMBAT);
 }
 
 bool Unit::isTargetableForAttack(bool checkFakeDeath) const
@@ -9813,8 +9835,11 @@ void Unit::CheckPowerProc(Powers power, int32 oldVal, int32 newVal, AuraEffectLi
 
             if (effect->GetAuraType() == SPELL_AURA_TRIGGER_SPELL_ON_POWER_PCT)
             {
-                oldValueCheck = GetPctOf(oldVal, GetMaxPower(power));
-                newValueCheck = GetPctOf(newVal, GetMaxPower(power));
+                if (int32 maxPower = GetMaxPower(power))
+                {
+                    oldValueCheck = GetPctOf(oldVal, maxPower);
+                    newValueCheck = GetPctOf(newVal, maxPower);
+                }
             }
 
             uint32 effectAmount = effect->GetAmount();
